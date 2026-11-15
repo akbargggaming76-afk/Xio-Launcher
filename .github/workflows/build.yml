@@ -9,11 +9,11 @@ on:
 
 jobs:
   build:
-    name: Build Xio Launcher
+    name: Build Xio Launcher V0.1
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout source
+      - name: Checkout Source
         uses: actions/checkout@v4
 
       - name: Setup JDK 17
@@ -22,35 +22,25 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Find Gradle project
-        id: project
-        run: |
-          FILE=$(find . -name settings.gradle.kts \
-            -o -name settings.gradle | head -n 1)
-
-          if [ -z "$FILE" ]; then
-            echo "ERROR: settings.gradle.kts not found!"
-            echo "Repository files:"
-            find . -maxdepth 4 -type f
-            exit 1
-          fi
-
-          DIR=$(dirname "$FILE")
-          echo "dir=$DIR" >> "$GITHUB_OUTPUT"
-          echo "Found project: $DIR"
-
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
 
+      - name: Check Project Files
+        run: |
+          echo "Checking Xio Launcher files..."
+          test -f settings.gradle.kts
+          test -f build.gradle.kts
+          test -f app/build.gradle.kts
+          echo "Xio project files found!"
+
       - name: Build Debug APK
-        working-directory: ${{ steps.project.outputs.dir }}
         run: gradle --no-daemon assembleDebug
 
       - name: Upload Xio APK
         uses: actions/upload-artifact@v4
         with:
           name: Xio-Launcher-V0.1
-          path: ${{ steps.project.outputs.dir }}/app/build/outputs/apk/debug/app-debug.apk
+          path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
