@@ -1,0 +1,61 @@
+
+name: Build Xio Launcher APK
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Check Xio Launcher Files
+        run: |
+          echo "Checking Xio Launcher files..."
+
+          pwd
+          ls -la
+
+          test -f settings.gradle.kts || {
+            echo "ERROR: settings.gradle.kts missing"
+            exit 1
+          }
+
+          test -f build.gradle.kts || {
+            echo "ERROR: build.gradle.kts missing"
+            exit 1
+          }
+
+          test -f app/build.gradle.kts || {
+            echo "ERROR: app/build.gradle.kts missing"
+            exit 1
+          }
+
+          echo "Xio project files found!"
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build Debug APK
+        run: gradle --no-daemon assembleDebug
+
+      - name: Upload Xio Launcher APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Xio-Launcher-V0.1-APK
+          path: app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
